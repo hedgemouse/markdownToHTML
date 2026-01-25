@@ -13,7 +13,14 @@ open(my $htmlFile, ">", $htmlFile_name) or die "Error opening $htmlFile_name: $!
 my $title = $arg1;
 $title =~ s/\.md$//;
 $title =~ s/^([a-z])/\u$1/;
-print $htmlFile "<!DOCTYPE html>\n" . "<html>\n" . "<head>\n" . "\t<title>$title</title>\n" . "</head>\n" . "<body>\n";
+print $htmlFile 
+"<!DOCTYPE html>\n" .
+"<html>\n" .
+	"\t<head>\n" .
+		"\t\t<title>$title</title>\n" .
+		"\t\t<meta charset=\"UTF-8\">\n" .
+	"\t</head>\n" .
+	"\t<body>\n";
 
 sub removeNewLine {
 	my $return_value = $_[0];
@@ -21,26 +28,35 @@ sub removeNewLine {
 	return($return_value);
 }
 
+sub isHeader {
+	if ($_[0] =~ m/\<h\d\>/) {
+		return("true");
+	}
+	return("false");
+}
+
 while (<$mdFile>) {
-	my $count_header = ($_ =~ tr/\#//);
-	if ($count_header) {
-		my $text = $_;
-		$text =~ s/\#{$count_header}\s//;
-		$text = removeNewLine($text);
-		print $htmlFile "\t<h$count_header>$text</h$count_header>\n";
+	my $text = $_;
+	my $header_count = ($_ =~ tr/\#//);
+	if ($header_count) {
+		$text =~ s/^\#{$header_count}\s(.+)/\<h$header_count\>$1\<\/h$header_count\>/;
 	}
-	if ($_ =~ m/\*[^\*]+\*[^\*]/) {
-		my $text = $_;
-		$text =~ s/\*(.+)\*/\<i\>$1\<\/i\>/;
-		$text = removeNewLine($text);
-		print $htmlFile "\t$text\n\t<br>\n";
+	if ($_ =~ m/\*\*[^*]+\*\*/) { # bold
+		$text =~ s/\*\*([^*]+)\*\*/\<b\>$1\<\/b\>/;
 	}
-	if ($_ =~ m/\*\*[^\*]+\*\*[^\*]/) {
-		my $text = $_;
-		$text =~ s/\*\*(.+)\*\*/\<b\>$1\<\/b\>/;
-		$text = removeNewLine($text);
-		print $htmlFile "\t$text\n\t<br>\n";
+	if ($_ =~ m/\*[^*]+\*/) { # italic
+		$text =~ s/\*([^*]+)\*/\<i\>$1\<\/i\>/;
+	}
+	$text = removeNewLine($text);
+	if ($text eq "") {
+		next;
+	}
+	if (isHeader($text) eq "true") {
+		print $htmlFile "\t\t$text\n";
+	} else {
+		print $htmlFile "\t\t<p>$text</p>\n";
 	}
 }
 
-print $htmlFile "</body>\n" . "</html>\n";
+print $htmlFile "\t</body>\n" .
+"</html>\n";
