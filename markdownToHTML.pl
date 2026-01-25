@@ -47,6 +47,12 @@ while (<$mdFile>) {
 	if ($_ =~ m/\*[^*]+\*/) { # italic
 		$text =~ s/\*([^*]+)\*/\<i\>$1\<\/i\>/;
 	}
+	if ($_ =~ m/\!\[.+\]\(.+\)/) { # image
+		$text =~ s/\!\[(.+)\]\((.+)\)/\<img\ src\=\"$2\"\ alt\=\"$1\"\>/;
+	}
+	if ($_ =~ m/\[.+\]\(.+\)/) { # link
+		$text =~ s/\[(.+)\]\((.+)\)/\<a\ href\=\"$2\"\>$1\<\/a\>/;
+	}
 	$text = removeNewLine($text);
 	if ($text eq "") {
 		next;
