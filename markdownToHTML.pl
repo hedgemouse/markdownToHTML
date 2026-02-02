@@ -35,30 +35,43 @@ sub isHeader {
 	return("false");
 }
 
+our $list_count = 0;
 while (<$mdFile>) {
 	my $text = $_;
 	my $header_count = ($_ =~ tr/\#//);
-	if ($header_count) {
-		$text =~ s/^\#{$header_count}\s(.+)/\<h$header_count\>$1\<\/h$header_count\>/;
+	my $isList = "false";
+
+	# Unordered list
+	if ($text =~ m/^\-\s/) {
+		$isList = "true";
+		if ($list_count == 0) {
+			print $htmlFile "\t\t<ul>\n"; # start of an unordered list
+			$list_count = 1;
+		} else {
+			$list_count += 1;
+		}
+	} elsif ($list_count > 0) {
+		$list_count = 0;
+		print $htmlFile "\t\t</ul>\n"; # end of an unordered list
 	}
-	if ($_ =~ m/\*\*[^*]+\*\*/) { # bold
-		$text =~ s/\*\*([^*]+)\*\*/\<b\>$1\<\/b\>/;
+	$text =~ s/^\-\s(.+)/\<li\>$1\<\/li\>/; # list item
+
+	if ($header_count > 0) {
+		$text =~ s/^\#{$header_count}\s(.+)/\<h$header_count\>$1\<\/h$header_count\>/; # header
 	}
-	if ($_ =~ m/\*[^*]+\*/) { # italic
-		$text =~ s/\*([^*]+)\*/\<i\>$1\<\/i\>/;
-	}
-	if ($_ =~ m/\!\[.+\]\(.+\)/) { # image
-		$text =~ s/\!\[(.+)\]\((.+)\)/\<img\ src\=\"$2\"\ alt\=\"$1\"\>/;
-	}
-	if ($_ =~ m/\[.+\]\(.+\)/) { # link
-		$text =~ s/\[(.+)\]\((.+)\)/\<a\ href\=\"$2\"\>$1\<\/a\>/;
-	}
+	$text =~ s/\*\*([^*]+)\*\*/\<b\>$1\<\/b\>/; # bold
+	$text =~ s/\*([^*]+)\*/\<i\>$1\<\/i\>/; # italic
+	$text =~ s/\!\[(.+)\]\((.+)\)/\<img\ src\=\"$2\"\ alt\=\"$1\"\>/; # image
+	$text =~ s/\[(.+)\]\((.+)\)/\<a\ href\=\"$2\"\>$1\<\/a\>/; # link
+
 	$text = removeNewLine($text);
 	if ($text eq "") {
 		next;
 	}
 	if (isHeader($text) eq "true") {
 		print $htmlFile "\t\t$text\n";
+	} elsif ($isList eq "true") {
+		print $htmlFile "\t\t\t$text\n";
 	} else {
 		print $htmlFile "\t\t<p>$text</p>\n";
 	}
