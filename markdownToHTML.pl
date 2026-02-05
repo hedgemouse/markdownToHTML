@@ -35,7 +35,8 @@ sub isHeader {
 	return("false");
 }
 
-our $list_count = 0;
+our $list_count_unordered = 0;
+our $list_count_ordered = 0;
 while (<$mdFile>) {
 	my $text = $_;
 	my $header_count = ($_ =~ tr/\#//);
@@ -44,17 +45,32 @@ while (<$mdFile>) {
 	# Unordered list
 	if ($text =~ m/^\-\s/) {
 		$isList = "true";
-		if ($list_count == 0) {
+		if ($list_count_unordered == 0) {
 			print $htmlFile "\t\t<ul>\n"; # start of an unordered list
-			$list_count = 1;
+			$list_count_unordered = 1;
 		} else {
-			$list_count += 1;
+			$list_count_unordered += 1;
 		}
-	} elsif ($list_count > 0) {
-		$list_count = 0;
+	} elsif ($list_count_unordered > 0) {
+		$list_count_unordered = 0;
 		print $htmlFile "\t\t</ul>\n"; # end of an unordered list
 	}
-	$text =~ s/^\-\s(.+)/\<li\>$1\<\/li\>/; # list item
+	$text =~ s/^\-\s(.+)/\<li\>$1\<\/li\>/; # list item (unordered list)
+
+	# Ordered list
+	if ($text =~ m/^\d\.\s/) {
+		$isList = "true";
+		if ($list_count_ordered == 0) {
+			print $htmlFile "\t\t<ol>\n"; # start of an ordered list
+			$list_count_ordered = 1;
+		} else {
+			$list_count_ordered += 1;
+		}
+	} elsif ($list_count_ordered > 0) {
+		$list_count_ordered = 0;
+		print $htmlFile "\t\t</ol>\n"; # end of an ordered list
+	}
+	$text =~ s/^\d\.\s(.+)/\<li\>$1\<\/li\>/; # list item (ordered list)
 
 	if ($header_count > 0) {
 		$text =~ s/^\#{$header_count}\s(.+)/\<h$header_count\>$1\<\/h$header_count\>/; # header

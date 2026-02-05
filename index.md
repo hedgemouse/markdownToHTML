@@ -20,3 +20,11 @@ this is a [link](https://example.com) and this is an image ![cat](https://upload
 - awesome
     - this is one tab in
 -YAY
+
+## Ordered list
+1. this
+2. is
+3. an
+4. ordered
+5. list
+
